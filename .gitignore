@@ -7,3 +7,87 @@ reports/
 *.egg-info/
 .pytest_cache/
 .vscode/
+# ==============================================
+# Python
+# ==============================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# ==============================================
+# Ambientes virtuais
+# ==============================================
+.venv/
+venv/
+env/
+ENV/
+.python-version
+
+# ==============================================
+# Variáveis de ambiente (NUNCA commitar!)
+# ==============================================
+.env
+.env.local
+.env.*.local
+*.env
+!.env.example
+
+# ==============================================
+# Saídas do scanner (podem conter dados sensíveis)
+# ==============================================
+reports/
+scans/
+*.report.html
+*.report.json
+*.report.pdf
+output/
+
+# ==============================================
+# Logs
+# ==============================================
+*.log
+logs/
+
+# ==============================================
+# Testes e cobertura
+# ==============================================
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# ==============================================
+# IDEs e editores
+# ==============================================
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ==============================================
+# Jupyter (caso use para testes rápidos)
+# ==============================================
+.ipynb_checkpoints/
+
+# ==============================================
+# Dados sensíveis que NUNCA devem subir
+# ==============================================
+*.pem
+*.key
+credentials.json
+secrets.yaml
+targets.txt
