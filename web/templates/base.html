@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}WebSec Scanner{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔒</text></svg>">
+</head>
+<body>
+    <header class="navbar">
+        <div class="nav-brand">
+            <a href="/">
+                <span class="logo">🔒</span>
+                <span class="brand-name">WebSec<span class="accent">Scanner</span></span>
+            </a>
+        </div>
+        <nav class="nav-links">
+            <a href="/" class="nav-link {% if page == 'dashboard' %}active{% endif %}">Dashboard</a>
+            <a href="/targets" class="nav-link {% if page == 'targets' %}active{% endif %}">Alvos</a>
+            <a href="/scans" class="nav-link {% if page == 'scans' %}active{% endif %}">Scans</a>
+            <a href="/docs" target="_blank" class="nav-link nav-link-api" title="Documentação da API (Swagger)">⚡ API</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+    <span>WebSec Scanner v0.1.0 — uso ético apenas</span>
+    <span class="footer-sep">·</span>
+    <a href="/docs" target="_blank">Documentação da API</a>
+</footer>
+
+    <div id="toast" class="toast"></div>
+    <script src="/static/js/app.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Alvos — WebSec Scanner{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Alvos</h1>
+        <p class="subtitle">Gerencie os alvos que você quer escanear</p>
+    </div>
+    <button class="btn btn-primary" onclick="openTargetModal()">+ Novo Alvo</button>
+</div>
+
+<div id="targets-list">
+    <p class="muted">Carregando…</p>
+</div>
+
+<!-- Modal -->
+<div id="target-modal" class="modal" hidden>
+    <div class="modal-content">
+        <h3 id="modal-title">Novo Alvo</h3>
+        <form id="target-form">
+            <input type="hidden" id="target-id">
+            <label>
+                Nome
+                <input type="text" id="target-name" required placeholder="Ex: Meu site">
+            </label>
+            <label>
+                URL
+                <input type="url" id="target-url" required placeholder="https://exemplo.com">
+            </label>
+            <label>
+                Notas (opcional)
+                <textarea id="target-notes" rows="3" placeholder="Observações sobre este alvo"></textarea>
+            </label>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-ghost" onclick="closeTargetModal()">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/targets.js"></script>
+{% endblock %}

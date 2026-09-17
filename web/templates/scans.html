@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Scans — WebSec Scanner{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Scans</h1>
+        <p class="subtitle">Histórico de execuções</p>
+    </div>
+    <button class="btn btn-primary" onclick="openScanModal()">▶ Disparar Scan</button>
+</div>
+
+<div id="scans-list">
+    <p class="muted">Carregando…</p>
+</div>
+
+<div id="scan-modal" class="modal" hidden>
+    <div class="modal-content">
+        <h3>Disparar novo scan</h3>
+        <form id="scan-form">
+            <label>
+                Alvo
+                <select id="scan-target" required></select>
+            </label>
+            <label>
+                Scanner
+                <select id="scan-scanner">
+                    <option value="headers">Headers de segurança</option>
+                </select>
+            </label>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-ghost" onclick="closeScanModal()">Cancelar</button>
+                <button type="submit" class="btn btn-primary">▶ Executar</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/scans.js"></script>
+{% endblock %}

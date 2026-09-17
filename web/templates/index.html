@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — WebSec Scanner{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Dashboard</h1>
+        <p class="subtitle">Visão geral dos seus scans e vulnerabilidades</p>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">Alvos</div>
+        <div class="stat-value" id="stat-targets">—</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Scans</div>
+        <div class="stat-value" id="stat-scans">—</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Findings</div>
+        <div class="stat-value" id="stat-findings">—</div>
+    </div>
+    <div class="stat-card critical">
+        <div class="stat-label">Críticos</div>
+        <div class="stat-value" id="stat-critical">—</div>
+    </div>
+</div>
+
+<section class="section">
+    <h2>Distribuição por severidade</h2>
+    <div class="severity-bar" id="severity-chart">
+        <p class="muted">Carregando…</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="section-header">
+        <h2>Scans recentes</h2>
+        <a href="/scans" class="btn btn-ghost">Ver todos →</a>
+    </div>
+    <div id="recent-scans">
+        <p class="muted">Carregando…</p>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/dashboard.js"></script>
+{% endblock %}
