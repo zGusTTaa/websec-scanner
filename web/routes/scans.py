@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from web import crud, schemas
 from web.database import get_db
 from web.services import scanner_service
+from websec.scanners import SCANNER_REGISTRY
 
 router = APIRouter(prefix="/api/scans", tags=["Scans"])
 
@@ -33,38 +34,56 @@ def get_scan(scan_id: int, db: Session = Depends(get_db)):
     )
 
 
-@router.post("/", response_model=schemas.ScanDetail, status_code=status.HTTP_201_CREATED)
-def create_scan(data: schemas.ScanCreate, db: Session = Depends(get_db)):
-    """Dispara um scan em um alvo cadastrado."""
+@router.post("/", response_model=schemas.ScanRead, status_code=status.HTTP_201_CREATED)
+def create_scan(
+    data: schemas.ScanCreate,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
+    """
+    Dispara um scan em background e retorna imediatamente com status 'running'.
+    O front-end deve fazer polling em GET /api/scans/{id} para acompanhar.
+    """
     target = crud.get_target(db, data.target_id)
     if not target:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Alvo não encontrado")
 
+    # Valida scanners ANTES de criar o registro no banco
+    if data.scanners is not None:
+        invalid = [s for s in data.scanners if s not in SCANNER_REGISTRY]
+        if invalid:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                f"Scanners inválidos: {invalid}. Disponíveis: {list(SCANNER_REGISTRY.keys())}",
+            )
+
     scan = crud.create_scan(db, target_id=target.id)
 
-    try:
-        scanner_service.run_scan(
-            db=db,
-            scan_id=scan.id,
-            target_url=target.url,
-            scanners=data.scanners,
-        )
-    except ValueError as e:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
+    def run_scan_in_background(scan_id: int, target_url: str, scanners):
+        """Executa o scan em uma sessão de banco separada."""
+        from web.database import SessionLocal
 
-    # Recarrega do banco (agora com findings e status final)
-    db.refresh(scan)
-    findings = crud.list_findings(db, scan_id=scan.id)
+        bg_db = SessionLocal()
+        try:
+            scanner_service.run_scan(
+                db=bg_db,
+                scan_id=scan_id,
+                target_url=target_url,
+                scanners=scanners,
+            )
+        except Exception as e:
+            print(f"[background] Erro no scan {scan_id}: {e}")
+        finally:
+            bg_db.close()
 
-    return schemas.ScanDetail(
-        id=scan.id,
-        target_id=scan.target_id,
-        started_at=scan.started_at,
-        finished_at=scan.finished_at,
-        status=scan.status,
-        total_findings=len(findings),
-        findings=[schemas.FindingRead.model_validate(f) for f in findings],
+    background_tasks.add_task(
+        run_scan_in_background,
+        scan.id,
+        target.url,
+        data.scanners,
     )
+
+    return scan
 
 
 @router.delete("/{scan_id}", status_code=status.HTTP_204_NO_CONTENT)

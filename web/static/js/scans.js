@@ -1,5 +1,9 @@
 let targetsCache = [];
+let scanEmAndamento = false;
 
+// ============================================
+// Carregar lista de scans
+// ============================================
 async function loadScans() {
     const container = document.getElementById('scans-list');
     try {
@@ -21,6 +25,10 @@ async function loadScans() {
         const targetMap = Object.fromEntries(targets.map(t => [t.id, t]));
         container.innerHTML = scans.map(s => {
             const t = targetMap[s.target_id];
+            const statusClass = s.status === 'completed' ? 'LOW'
+                              : s.status === 'failed'    ? 'CRITICAL'
+                              : 'MEDIUM';
+            const isRunning = s.status === 'running';
             return `
                 <div class="card">
                     <div class="card-info">
@@ -28,9 +36,13 @@ async function loadScans() {
                         <div class="card-meta">${escapeHtml(t?.url || '')} · ${formatDate(s.started_at)}</div>
                     </div>
                     <div class="card-actions">
-                        <span class="badge ${s.status === 'completed' ? 'LOW' : s.status === 'failed' ? 'CRITICAL' : 'MEDIUM'}">${escapeHtml(s.status)}</span>
+                        <span class="badge ${statusClass}">${escapeHtml(s.status.toUpperCase())}</span>
                         <a href="/scans/${s.id}" class="btn btn-ghost btn-small">Ver</a>
-                        <button class="btn btn-danger btn-small" onclick="deleteScanRow(${s.id})">Remover</button>
+                        <button class="btn btn-danger btn-small"
+                                onclick="deleteScanRow(${s.id})"
+                                ${isRunning ? 'disabled title="Aguarde o scan terminar"' : ''}>
+                            Remover
+                        </button>
                     </div>
                 </div>
             `;
@@ -40,6 +52,9 @@ async function loadScans() {
     }
 }
 
+// ============================================
+// Modal
+// ============================================
 function openScanModal() {
     const select = document.getElementById('scan-target');
     if (!targetsCache.length) {
@@ -56,26 +71,70 @@ function closeScanModal() {
     document.getElementById('scan-modal').hidden = true;
 }
 
+// ============================================
+// Polling: acompanha o status do scan
+// ============================================
+async function pollScan(scanId, maxAttempts = 90, intervalMs = 2000) {
+    for (let i = 0; i < maxAttempts; i++) {
+        await new Promise(r => setTimeout(r, intervalMs));
+        try {
+            const scan = await api.get(`/api/scans/${scanId}`);
+            if (scan.status !== 'running') {
+                return scan;
+            }
+        } catch (e) {
+            console.warn('Erro no polling:', e);
+        }
+    }
+    return null;
+}
+
+// ============================================
+// Submit: dispara scan em background
+// ============================================
 document.getElementById('scan-form').addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    if (scanEmAndamento) {
+        showToast('Aguarde — já existe um scan em execução.', 'error');
+        return;
+    }
+
     const targetId = parseInt(document.getElementById('scan-target').value);
-    const scanner = document.getElementById('scan-scanner').value;
+    const scannerValue = document.getElementById('scan-scanner').value;
+    const scanners = scannerValue === '__all__' ? null : [scannerValue];
 
     closeScanModal();
-    showToast('Executando scan… aguarde.', 'success');
+
+    scanEmAndamento = true;
 
     try {
-        const result = await api.post('/api/scans/', {
+        const scan = await api.post('/api/scans/', {
             target_id: targetId,
-            scanners: [scanner],
+            scanners: scanners,
         });
-        showToast(`Scan concluído! ${result.total_findings} findings encontrados.`);
+
+        showToast(`Scan #${scan.id} iniciado…`);
         loadScans();
+
+        const finished = await pollScan(scan.id);
+
+        if (finished) {
+            showToast(`✅ Scan #${finished.id} concluído: ${finished.total_findings} findings.`);
+        } else {
+            showToast('⏱ Scan ainda em execução. Recarregue em alguns segundos.', 'error');
+        }
     } catch (e) {
         showToast('Erro: ' + e.message, 'error');
+    } finally {
+        scanEmAndamento = false;
+        loadScans();
     }
 });
 
+// ============================================
+// Deletar
+// ============================================
 async function deleteScanRow(id) {
     if (!confirm('Remover este scan?')) return;
     try {
@@ -87,4 +146,7 @@ async function deleteScanRow(id) {
     }
 }
 
+// ============================================
+// Inicialização
+// ============================================
 loadScans();
