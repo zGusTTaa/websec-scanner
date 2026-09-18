@@ -31,3 +31,34 @@ Ferramenta de análise de vulnerabilidades web com **dashboard visual** e **API 
 ---
 
 ## 🏗 Arquitetura
+
+
+
+**O motor (`websec/`) é independente da API.** Ele pode ser usado via CLI (`python -m websec --url ...`) ou consumido pela aplicação web (`web/`). Essa separação permite evoluir os dois lados sem quebrar nada.
+
+---
+
+## 🚀 Como rodar
+
+### Pré-requisitos
+- Python 3.12+
+- pip
+- Git
+
+### Instalação
+
+```bash
+# Clone o repositório
+git clone https://github.com/zGusTTaa/websec-scanner.git
+cd websec-scanner
+
+# Crie o ambiente virtual
+python3 -m venv .venv
+source .venv/bin/activate   # Linux/macOS
+# .\.venv\Scripts\Activate.ps1  # Windows
+
+# Instale as dependências
+pip install -r requirements.txt
+
+# Copie o template de variáveis de ambiente
+cp .env.example .env
