@@ -2,16 +2,8 @@ from sqlalchemy.orm import Session
 
 from web import crud
 from websec.core.session import Session as WebsecSession
-from websec.models.severity import Severity
 from websec.models.target import Target as WebsecTarget
-from websec.scanners.headers import HeadersScanner
-
-
-# Registro de scanners disponíveis
-# Quando você criar novos scanners, adiciona aqui
-SCANNER_REGISTRY = {
-    "headers": HeadersScanner,
-}
+from websec.scanners import SCANNER_REGISTRY  # ← importa o registry centralizado
 
 
 def run_scan(db: Session, scan_id: int, target_url: str, scanners: list[str] | None) -> int:
@@ -41,7 +33,6 @@ def run_scan(db: Session, scan_id: int, target_url: str, scanners: list[str] | N
             try:
                 findings = scanner.scan(target)
             except Exception as e:
-                # Scanner falhou — loga mas não derruba o scan todo
                 print(f"[scanner_service] Erro em {name}: {e}")
                 continue
 
