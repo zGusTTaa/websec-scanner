@@ -2,6 +2,8 @@
 
 Ferramenta de análise de vulnerabilidades web com **dashboard visual** e **API REST documentada**. Detecta problemas comuns de segurança em aplicações HTTP.
 
+![Dashboard do WebSec Scanner](docs/screenshots/01-dashboard-empty.png)
+
 > ⚠️ **Uso ético apenas.** Esta ferramenta deve ser usada exclusivamente em alvos que você possui ou tem autorização explícita para testar. Uso não autorizado é crime (Lei 12.737/2012 no Brasil).
 
 ---
@@ -10,7 +12,7 @@ Ferramenta de análise de vulnerabilidades web com **dashboard visual** e **API 
 
 - **Scanner de headers de segurança** — detecta `Content-Security-Policy`, `HSTS`, `X-Frame-Options` e outros headers ausentes
 - **Análise de informações do servidor** — identifica tecnologias e versões expostas via headers HTTP
-- **Descoberta de diretórios sensíveis** — procura por `/admin`, `/.env`, `/backup.zip`, `/phpinfo.php` e outros paths críticos
+- **Descoberta de diretórios sensíveis** — procura por `/admin`, `/.env`, `/backup.zip`, `/phpinfo.php` e outros paths críticos, com **baseline check** para evitar falsos positivos
 - **Dashboard web** — interface dark mode com visualização de alvos, scans e findings
 - **API REST** — todos os recursos acessíveis via HTTP, com documentação interativa automática
 - **Scan em background** — não bloqueia a interface, progresso acompanhado por polling automático
@@ -73,6 +75,9 @@ websec-scanner/
 │   ├── models.py        # Modelos SQLAlchemy
 │   └── app.py           # Aplicação FastAPI
 │
+├── docs/
+│   └── screenshots/     # Imagens para o README
+│
 ├── run.py               # Entrypoint da aplicação web
 └── requirements.txt
 ```
@@ -127,6 +132,46 @@ Depois abra:
 
 ---
 
+## 📸 Screenshots
+
+### 🖥️ Dashboard
+
+Visão geral com contadores de alvos, scans e findings, além da distribuição por severidade.
+
+![Dashboard](docs/screenshots/01-dashboard-empty.png)
+
+### 🎯 Gerenciamento de Alvos
+
+CRUD completo de alvos que serão escaneados.
+
+| Lista vazia | Novo Alvo |
+|---|---|
+| ![Alvos vazios](docs/screenshots/02-targets-empty.png) | ![Novo Alvo](docs/screenshots/04-new-target-modal.png) |
+
+Após cadastrar:
+
+![Alvo cadastrado](docs/screenshots/05-targets-list.png)
+
+### 🔍 Scans
+
+Disparo de scan com seleção de alvo e scanner:
+
+| Lista vazia | Disparar Scan |
+|---|---|
+| ![Scans vazios](docs/screenshots/03-scans-empty.png) | ![Disparar Scan](docs/screenshots/06-run-scan-modal.png) |
+
+Status atualizado em tempo real após a execução:
+
+![Scan concluído](docs/screenshots/07-scans-completed.png)
+
+### 📋 Detalhes do Scan
+
+Findings agrupados por severidade, com descrição e recomendação de correção.
+
+![Detalhes do Scan](docs/screenshots/08-scan-detail.png)
+
+---
+
 ## 📡 Endpoints da API
 
 | Método | Endpoint | Descrição |
@@ -158,6 +203,15 @@ Documentação interativa completa em `/docs`.
 
 ---
 
+## 🧠 Decisões técnicas
+
+- **Baseline check no scanner de diretórios** — antes de classificar um path como exposto, o scanner faz uma requisição a um path aleatório para detectar servidores que respondem `200 OK` para qualquer coisa (falsos positivos comuns).
+- **Execução paralela com `ThreadPoolExecutor`** — o scanner de diretórios testa 20+ paths simultaneamente, reduzindo o tempo total de ~100s para ~10s.
+- **Background tasks + polling** — scans rodam em background no FastAPI, e o front-end acompanha o status por polling. Evita travar a interface em operações longas.
+- **Separação motor/aplicação** — o motor `websec/` não conhece FastAPI, SQLAlchemy ou o dashboard. Ele é uma biblioteca Python pura que pode ser consumida por qualquer interface.
+
+---
+
 ## 🗺 Roadmap
 
 - [x] Motor de scanner modular (headers, server_info, directories)
@@ -165,6 +219,7 @@ Documentação interativa completa em `/docs`.
 - [x] Dashboard web com dark mode
 - [x] Scan em background com polling automático
 - [x] Execução paralela no scanner de diretórios
+- [x] Baseline check para eliminar falsos positivos
 - [ ] Scanner de SQL Injection
 - [ ] Scanner de XSS refletido
 - [ ] Exportação de relatórios em HTML/PDF
